@@ -6,13 +6,13 @@ class Dino(Pixel):
     def __init__(self, canv, nrow, ncol, scale, c=2):
         '''initiates the dino object with the given parameters.'''
         self.canvas = canv
+        self.i = 20  # start at the bottom of the canvas
+        self.j = 40  # start in the middle of the canvas
         self.nrow = nrow
         self.ncol = ncol
         self.scale = scale
-        self.color = Pixel.color[c]  # set the color of the dino
+        self.color = c  # set the color of the dino
         self.pattern = self.get_pattern()
-        self.i = 20  # start at the bottom of the canvas
-        self.j = 40  # start in the middle of the canvas
         self.jumping = False
     # Remove the pass statement and implement the __init__ method as described in the PDF.
 
@@ -33,59 +33,71 @@ class Dino(Pixel):
 
     def activate(self):
         '''iterates through the pattern array and creates pixel objects for every non-zero values'''
-        for i in range(self.pattern):
-            for j in range(i):
-                if self.pattern[i, j] != 0:
-                    # create a pixel object at the correct position
-                    pixel = Pixel(self.canvas, self.i + i, self.j + j, self.nrow, self.ncol, self.scale, self.color)
-            
+        dino_pixels = []
+        
+        for r in range(self.pattern.shape[0]):
+            for c in range(self.pattern.shape[1]):
+                if (self.pattern[r, c]) == 1:
+                    pixel = Pixel(self.canvas, (self.i + r), (self.j + c), self.nrow, self.ncol, self.scale, self.color)
+                    dino_pixels.append(pixel)
+
+        self.dino_pixels = dino_pixels
+
+                    
     # Remove the pass statement and implement the activate method as described in the PDF.
         
 
     def down(self):
         '''moves the dino object down by one step.'''
-        # check if the dino can move down
-        if self.i < self.nrow - 1:
-            # delete the current dino
-            self.delete()
-            # move down
-            self.i += 1
-            # activate the dino at the new position
-            self.activate()
-    # Remove the pass statement and implement the down method as described in the PDF.
+        new_dino_pixels = []
 
+        for pixel in reversed(self.dino_pixels):
+            if pixel.i < self.nrow - 1: # check if the dino can move down
+                pixel.delete() # delete the current dino
+                pixel.i += 1 # move down
+                pixel = Pixel(pixel.canvas, pixel.i, pixel.j, self.nrow, self.ncol, self.scale, self.color) # activate the dino at the new position
+                new_dino_pixels.append(pixel)
+            else:
+                print("Dino at the bottom!")
+                break
 
+        self.dino_pixels = new_dino_pixels
+    # Remove the pass statement and implement the down method as described in the PDF
     def up(self):
         '''moves the dino object up by one step.'''
-        # check if the dino can move up
-        if self.i > 0:
-            # delete the current dino
-            self.delete()
-            # move up
-            self.i -= 1
-            # activate the dino at the new position
-            self.activate()
-    # Remove the pass statement and implement the up method as described in the PDF.
+        new_dino_pixels = []
 
+        for pixel in self.dino_pixels:
+            if pixel.i > 0:
+                pixel.delete() # delete the current dino
+                pixel.i -= 1
+                pixel = Pixel(pixel.canvas, pixel.i, pixel.j, self.nrow, self.ncol, self.scale, self.color)
+                new_dino_pixels.append(pixel)
+            else:
+                print("Dino at the top!")
+                break
+
+        self.dino_pixels = new_dino_pixels
 
     def jump(self):
         '''initiates a jump animation for the dinosaur'''
         if self.jumping == False: # check if the dino can jump
             self.jumping = True # set jumping to True
-            
-        for r in range(10):
-            self.activate_jump(1) # activate the jump method
-            self.canvas.after(50) # wait for 20 milliseconds
 
-        for c in range(10):
-            self.activate_jump(-1)
-            self.canvas.after(50) # wait for 20 milliseconds
+            for r in range(10):
+                self.canvas.after(50, self.activate_jump(1)) # wait for 50 milliseconds
+                self.canvas.update()
+
+            for c in range(10):
+                self.canvas.after(50, self.activate_jump(-1)) # wait for 50 milliseconds
+                self.canvas.update()
+                
+        elif self.jumping == True: # check if the dino is already jumping
+            print("Dino already jumping!")
 
         self.jumping = False # set jumping to False
         
      # start the jump animation
-            
-    # Remove the pass statement and implement the jump method as described in the PDF.
 
 
     def activate_jump(self, step):
