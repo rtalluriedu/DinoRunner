@@ -6,7 +6,7 @@ class Pixel:
     # Predefined color list for pixel representation
     color=['black','white','yellow','red','blue','green','orange','purple','brown','cyan']
 
-    def __init__(self,canv,i,j,nrow,ncol,scale,icolor,vector=[0,0]):
+    def __init__(self, canv, i, j, nrow, ncol, scale, icolor, vector=[0,0]):
         '''initiates the pixel object with the given parameters.'''
         self.canvas = canv
         self.i = i
@@ -16,46 +16,35 @@ class Pixel:
         self.scale = scale
         self.icolor = icolor
         self.vector = vector
-        self.id=  self.canvas.create_rectangle(self.j*self.scale,self.i*self.scale, (self.j+1)*self.scale,(self.i+1)*self.scale, 
-                                             fill=self.color[self.icolor],outline='black')
+        self.id = self.canvas.create_rectangle(self.j * self.scale, self.i * self.scale, (self.j + 1) * self.scale, (self.i +1 ) * self.scale, 
+                                               fill = self.color[self.icolor], outline = 'black')
                                              
-    # Remove the pass statement and implement the __init__ method as described in the PDF.
 
     def __str__(self):
         """return a string representation of the pixel object."""
         return f"({self.i}, {self.j}) {self.color[self.icolor]}"
-    # Remove the pass statement and implement the __str__ method as described in the PDF.
 
 
     def delete(self):
         '''deletes the pixel from the canvas.'''
         self.canvas.delete(self.id)
-    # Remove the pass statement and implement the delete method as described in the PDF.
-   
 
     def left(self):
         '''sets the pixels movement vector to move left.'''
-        self.vector=[0,-1]
-    # Remove the pass statement and implement the left method as described in the PDF.
+        self.vector = [0,-1]
         
 
     def right(self):
         '''sets the pixels movement vector to move right.'''
-        self.vector=[0,1]
-    # Remove the pass statement and implement the right method as described in the PDF.
-
+        self.vector = [0,1]
 
     def up(self):
         '''sets the pixels movement vector to move up.'''
-        self.vector=[-1,0]
-    # Remove the pass statement and implement the up method as described in the PDF.
-
+        self.vector = [-1,0]
 
     def down(self):
         '''sets the pixels movement vector to move down.'''
-        self.vector=[1,0]
-    # Remove the pass statement and implement the down method as described in the PDF.
-
+        self.vector = [1,0]
 
     def next(self):
         '''moves the pixel one step in the current direction.'''
@@ -71,9 +60,7 @@ class Pixel:
             # move the pixel on the canvas
             self.canvas.move(self.id, self.vector[1] * self.scale, self.vector[0] * self.scale)
         else:
-            print("Boundary reached, pixel cannot move further.")
-    # Remove the pass statement and implement the next method as described in the PDF.
-    
+            print("Boundary reached, pixel cannot move further.")    
             
     
 #=============================================================================
