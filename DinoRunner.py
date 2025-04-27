@@ -10,11 +10,15 @@ class DinoGame:
     #-------------------------------------------------------------------------
     
     def __init__(self, root, nrow, ncol, scale):
+        # canvas variables
+        
         self.root = root
         self.nrow = nrow
         self.ncol = ncol
         self.scale = scale
+ 
         #setter/getter methods
+
         self.__game_over = False
         self.__pause = False
         self.__started = False
@@ -22,22 +26,18 @@ class DinoGame:
         self.__pause_time = 0
         self.__next_spawn_time = random.uniform(1,3) + time.time() #spawns obstacle at a radnom interval between 1-3 secs
         
-        self.__canvas = Canvas(root, width=ncol*scale, height=nrow*scale, bg='white') #create canvas
+        self.__canvas = Canvas(root, width=ncol*scale, height=nrow*scale, bg='black') #create canvas
         self.__canvas.pack()
-        
-        root.bind('s', lambda event: self.start_game()) #set key binds
-        root.bind('<space>', lambda event: self.jump())
-        root.bind('p', lambda event: self.pause())
-        
+
         self.__start_msg = self.__canvas.create_text( #start message displayed
-            ncol*scale/2, nrow*scale/2,
+            (ncol * scale) / 2, (nrow * scale) / 2,
             text="Hit 'S' to start game", 
             font=('Times', 25)
         )
         
         #initialize dino and obstacle classes
         self.__obstacles = [] #empty list to store obstacles
-        self.__dino = Dino(self.__canvas, 20, nrow-10, scale)
+        self.__dino = Dino(self.__canvas, self.nrow, self.ncol, self.scale)
         
         
     #-------------------------------------------------------------------------
@@ -96,8 +96,8 @@ class DinoGame:
     #-------------------------------------------------------------------------
 
     def start_game(self):
-        if not self.__started and not self.__game_over: #make sure game started
-            self.__canvas.delete(self.__start_msg)  #take away begining message
+        if not self.__started and not self.__game_over: # make sure game started
+            self.__canvas.delete(self.__start_msg)  # take away begining message
             self.__score = 0
             self.__started = True
             self.__start_time = time.time()
@@ -147,8 +147,11 @@ class DinoGame:
         return False #false for no overlap
     
 
-def jump(self):
-    if self.__started and not self.__game_over and not self.__dino.jumping: #make sure game is running
+    def jump(self):
+        if self.__started and not self.__game_over and not self.__dino.jumping: # make sure game is running
+            self.__dino.jump()
+
+        '''
         ground_level = self.nrow - 10 #set ground level for where the dino starts
         
         if self.__dino.i + 9 >= ground_level:  #check if dino on ground height
@@ -157,30 +160,33 @@ def jump(self):
                 self.__dino.down()  #bring dino down
         else:
             print("Already jumping!")  #let user know dino in air
+        '''
 
-def pause(self):
-    if not self.__started: #pause if game has started
-        return
-    
-    if not self.__pause:
-        self.__pause = True
-        self.__pause_start = time.time()  #track time of pause
-        print("Game paused")
-    else: #resumes game
-        self.__pause = False
-        pause_duration = time.time() - self.__pause_start #make up for paused game so timer is consitent
-        self.__start_time += pause_duration
-        print("Game resumed")
-
-def update_survival_score(self):
-    if self.__started and not self.__pause and not self.__game_over:
-        current_time = time.time()
-        seconds_survived = int(current_time - self.__start_time)
-        base_score = seconds_survived
-        bonus_multiplier = 1.0 + 0.1 * (seconds_survived // 30) #bonus multiplier that increases by .1 every 30 seconds survived
-        self.__score = int(base_score * bonus_multiplier) #final score adds bonus
+    def pause(self):
+        if not self.__started: #pause if game has started
+            return
         
-        print(f"Score: {self.__score} (Time: {seconds_survived}s, Bonus: {bonus_multiplier:.1f}x)")
+        if not self.__pause:
+            self.__pause = True
+            self.__pause_start = time.time()  #track time of pause
+            print("Game paused")
+
+        else: #resumes game
+            self.__pause = False
+            pause_duration = time.time() - self.__pause_start #make up for paused game so timer is consitent
+            self.__start_time += pause_duration
+            print("Game resumed")
+
+
+    def update_survival_score(self):
+        if self.__started and not self.__pause and not self.__game_over:
+            current_time = time.time()
+            seconds_survived = int(current_time - self.__start_time)
+            base_score = seconds_survived
+            bonus_multiplier = 1.0 + 0.1 * (seconds_survived // 30) #bonus multiplier that increases by .1 every 30 seconds survived
+            self.__score = int(base_score * bonus_multiplier) #final score adds bonus
+            
+            print(f"Score: {self.__score} (Time: {seconds_survived}s, Bonus: {bonus_multiplier:.1f}x)")
 
 
 #=============================================================================
