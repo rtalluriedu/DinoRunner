@@ -22,6 +22,13 @@ class DinoGame:
         self.__pause_time = 0
         self.__next_spawn_time = random.uniform(1,3) + time.time() #spawns obstacle at a radnom interval between 1-3 secs
         
+        self.__canvas = Canvas(root, width=ncol*scale, height=nrow*scale, bg='white') #create canvas
+        self.__canvas.pack()
+        
+        root.bind('s', lambda event: self.start_game()) #set key binds
+        root.bind('<space>', lambda event: self.jump())
+        root.bind('p', lambda event: self.pause())
+        
         self.__start_msg = self.__canvas.create_text( #start message displayed
             ncol*scale/2, nrow*scale/2,
             text="Hit 'S' to start game", 
@@ -87,37 +94,93 @@ class DinoGame:
     #-------------------------------------------------------------------------
     # Game Logic
     #-------------------------------------------------------------------------
-    
+
     def start_game(self):
-        if self.is_game_over is False and self.is_started is False:
-            self.__canvas.delete(self.__start_msg)
-            self.__score = 0 #set score to 0
-            self.__started = True #start game
-            print("Game started.")
-            self.__start_time = time.time() #record time from start
-
-    
+        if not self.__started and not self.__game_over: #make sure game started
+            self.__canvas.delete(self.__start_msg)  #take away begining message
+            self.__score = 0
+            self.__started = True
+            self.__start_time = time.time()
+            self.__dino.activate()  # THIS IS CRUCIAL - makes dinosaur appear
+            print("Game started!")
+        
+        
     def next(self):
-        pass
+        if not self.__started or self.__pause or self.__game_over:
+            return #only runs if game is running
+
+        current_time = time.time() #creates obstacles
+        if len(self.__obstacles) == 0 and current_time >= self.__next_spawn_time: #check if any obstacles are present
+            new_obstacle = Obstacles.random_select(self.__canvas, self.nrow, self.ncol, self.scale)
+            new_obstacle.activate()
+            self.__obstacles.append(new_obstacle)
+            self.__next_spawn_time = current_time + random.uniform(1, 3) #new obstacles every 1-3s
+
+        for obstacle in self.__obstacles[:]: 
+            obstacle.left() #moves obstacle left by one
+            for dino_pixel in self.__dino.dino_pixels: #check obstacle dino collison
+                for pixel in obstacle.pixels:
+                    if (dino_pixel.i == pixel.i and #check if pixels are equal to each other
+                        dino_pixel.j == pixel.j):
+                        self.__canvas.create_text( #game over message 
+                            self.ncol * self.scale / 2,
+                            self.nrow * self.scale / 2,
+                            text="GAME OVER",
+                            font=('Times', 30),
+                            fill='red'
+                        )
+                        self.__game_over = True
+                        return
+                
+            if obstacle.j + obstacle.w < 0:  #checks if obstacle is off screen so it can be removed
+                for pixel in obstacle.pixels:
+                    pixel.delete()
+                self.__obstacles.remove(obstacle)
+                continue
 
     
-    def check_collision(self):
-        pass
-    # Remove the pass statement and implement the check_collision method as described in the PDF.
+    def check_collision(self, obstacle): #check every dino pixel with every obstacle pixel
+        for dino_pixel in self.__dino.dino_pixels: 
+            for obs_pixel in obstacle.pixels:
+                if dino_pixel.i == obs_pixel.i and dino_pixel.j == obs_pixel.j:
+                    return True  #true for overlap
+        return False #false for no overlap
     
 
-    def jump(self):
-        pass
-    # Remove the pass statement and implement the jump method as described in the PDF.
+def jump(self):
+    if self.__started and not self.__game_over and not self.__dino.jumping: #make sure game is running
+        ground_level = self.nrow - 10 #set ground level for where the dino starts
+        
+        if self.__dino.i + 9 >= ground_level:  #check if dino on ground height
+            self.__dino.jump()
+            if not self.__dino.jumping and self.__dino.i + 9 < ground_level:
+                self.__dino.down()  #bring dino down
+        else:
+            print("Already jumping!")  #let user know dino in air
 
+def pause(self):
+    if not self.__started: #pause if game has started
+        return
+    
+    if not self.__pause:
+        self.__pause = True
+        self.__pause_start = time.time()  #track time of pause
+        print("Game paused")
+    else: #resumes game
+        self.__pause = False
+        pause_duration = time.time() - self.__pause_start #make up for paused game so timer is consitent
+        self.__start_time += pause_duration
+        print("Game resumed")
 
-    def pause(self):
-        pass
-    # Remove the pass statement and implement the pause method as described in the PDF.
-
-    def update_survival_score(self):
-        pass
-    # Remove the pass statement and implement the update_survival_score method as described in the PDF.
+def update_survival_score(self):
+    if self.__started and not self.__pause and not self.__game_over:
+        current_time = time.time()
+        seconds_survived = int(current_time - self.__start_time)
+        base_score = seconds_survived
+        bonus_multiplier = 1.0 + 0.1 * (seconds_survived // 30) #bonus multiplier that increases by .1 every 30 seconds survived
+        self.__score = int(base_score * bonus_multiplier) #final score adds bonus
+        
+        print(f"Score: {self.__score} (Time: {seconds_survived}s, Bonus: {bonus_multiplier:.1f}x)")
 
 
 #=============================================================================
