@@ -6,15 +6,14 @@ class Dino(Pixel):
     def __init__(self, canv, nrow, ncol, scale, c=2):
         '''initiates the dino object with the given parameters.'''
         self.canvas = canv
-        self.i = 20  # start at the bottom of the canvas
-        self.j = 40  # start in the middle of the canvas
+        self.i = nrow - (1 * scale)  # start at the bottom of the canvas
+        self.j = ncol / 2 # start in the middle of the canvas
         self.nrow = nrow
         self.ncol = ncol
         self.scale = scale
         self.color = c  # set the color of the dino
         self.pattern = self.get_pattern()
         self.jumping = False
-    # Remove the pass statement and implement the __init__ method as described in the PDF.
 
 
     def get_pattern(self):
@@ -28,8 +27,6 @@ class Dino(Pixel):
                          [1, 1, 1, 1, 0, 0],
                          [0, 1, 0, 1, 0, 0],
                          [0, 1, 0, 1, 0, 0]])
-    # Remove the pass statement and implement the get_pattern method as described in the PDF.
-
 
     def activate(self):
         '''iterates through the pattern array and creates pixel objects for every non-zero values'''
@@ -38,42 +35,60 @@ class Dino(Pixel):
         for r in range(self.pattern.shape[0]):
             for c in range(self.pattern.shape[1]):
                 if (self.pattern[r, c]) == 1:
-                    pixel = Pixel(self.canvas, (self.i + r), (self.j + c), self.nrow, self.ncol, self.scale, self.color)
+                    pixel = Pixel(self.canvas,
+                                 (self.i + r),
+                                 (self.j + c),
+                                 self.nrow,
+                                 self.ncol,
+                                 self.scale,
+                                 self.color
+                                 )
                     dino_pixels.append(pixel)
 
         self.dino_pixels = dino_pixels
-
-                    
-    # Remove the pass statement and implement the activate method as described in the PDF.
-        
+    
 
     def down(self):
         '''moves the dino object down by one step.'''
         new_dino_pixels = []
 
         for pixel in reversed(self.dino_pixels):
-            if pixel.i < self.nrow - 1: # check if the dino can move down
+            if pixel.i < self.nrow - .5 * self.scale: # check if the dino can move down
                 pixel.delete() # delete the current dino
                 pixel.i += 1 # move down
-                pixel = Pixel(pixel.canvas, pixel.i, pixel.j, self.nrow, self.ncol, self.scale, self.color) # activate the dino at the new position
+                pixel = Pixel(pixel.canvas,
+                             pixel.i,
+                             pixel.j,
+                             self.nrow,
+                             self.ncol,
+                             self.scale,
+                             self.color
+                             ) # activate the dino at the new position
                 new_dino_pixels.append(pixel)
-            else:
+            elif pixel.i >= self.nrow - .5 * self.scale: # check if the dino is at the bottom
                 print("Dino at the bottom!")
                 break
 
         self.dino_pixels = new_dino_pixels
-    # Remove the pass statement and implement the down method as described in the PDF
+    
+
     def up(self):
         '''moves the dino object up by one step.'''
         new_dino_pixels = []
 
         for pixel in self.dino_pixels:
-            if pixel.i > 0:
+            if pixel.i > .5 * self.scale: # check if the dino can move up
                 pixel.delete() # delete the current dino
                 pixel.i -= 1
-                pixel = Pixel(pixel.canvas, pixel.i, pixel.j, self.nrow, self.ncol, self.scale, self.color)
+                pixel = Pixel(pixel.canvas,
+                              pixel.i, pixel.j,
+                              self.nrow,
+                              self.ncol,
+                              self.scale, 
+                              self.color
+                              )
                 new_dino_pixels.append(pixel)
-            else:
+            elif pixel.i <= .5 * self.scale: # check if the dino is at the top
                 print("Dino at the top!")
                 break
 
@@ -94,6 +109,7 @@ class Dino(Pixel):
                 
         elif self.jumping == True: # check if the dino is already jumping
             print("Dino already jumping!")
+            return
 
         self.jumping = False # set jumping to False
         
@@ -107,10 +123,8 @@ class Dino(Pixel):
             
         elif step == -1:
             self.down()
-            
-        
-    # Remove the pass statement and implement the perform_jump method as described in the PDF.
-    
+     
+
 
 #=============================================================================
 # Testing Functions for Dinosaur Class - DO NOT MODIFY
@@ -148,7 +162,7 @@ def main():
     root = Tk()
     nrow = 40
     ncol = 80
-    scale = 20
+    scale = 10
     canvas = Canvas(root, width=ncol * scale, height=nrow * scale, bg="black")
     canvas.pack()
 
