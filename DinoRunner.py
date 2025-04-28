@@ -26,7 +26,7 @@ class DinoGame:
         self.__pause_time = 0
         self.__next_spawn_time = random.uniform(1,3) + time.time() #spawns obstacle at a radnom interval between 1-3 secs
         
-        self.__canvas = Canvas(root, width=ncol*scale, height=nrow*scale, bg='black') #create canvas
+        self.__canvas = Canvas(root, width=ncol*scale, height=nrow*scale, bg='white') #create canvas
         self.__canvas.pack()
 
         self.__start_msg = self.__canvas.create_text( #start message displayed
