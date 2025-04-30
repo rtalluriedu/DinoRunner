@@ -2,6 +2,7 @@ from tkinter import *
 import time, random
 from Obstacles import Obstacles
 from Dino import Dino
+from pygame import mixer
 
 class DinoGame:
     
@@ -38,6 +39,11 @@ class DinoGame:
         #initialize dino and obstacle classes
         self.__obstacles = [] #empty list to store obstacles
         self.__dino = Dino(self.__canvas, self.nrow, self.ncol, self.scale)
+        
+        #sound files initializ
+        mixer.init()
+        self.jump_sound = mixer.Sound('jump.wav.wav')
+        self.collision_sound = mixer.Sound('collision.flac')
         
         
     #-------------------------------------------------------------------------
@@ -101,7 +107,7 @@ class DinoGame:
             self.__score = 0
             self.__started = True
             self.__start_time = time.time()
-            self.__dino.activate()  # THIS IS CRUCIAL - makes dinosaur appear
+            self.__dino.activate()  #makes dinosaur appear
             print("Game started!")
         
         
@@ -122,6 +128,7 @@ class DinoGame:
                 for pixel in obstacle.pixels:
                     if (dino_pixel.i == pixel.i and #check if pixels are equal to each other
                         dino_pixel.j == pixel.j):
+                        self.collision_sound.play()  # Play collision sound
                         self.__canvas.create_text( #game over message 
                             self.ncol * self.scale / 2,
                             self.nrow * self.scale / 2,
@@ -150,17 +157,8 @@ class DinoGame:
     def jump(self):
         if self.__started and not self.__game_over and not self.__dino.jumping: # make sure game is running
             self.__dino.jump()
+            self.jump_sound.play()
 
-        '''
-        ground_level = self.nrow - 10 #set ground level for where the dino starts
-        
-        if self.__dino.i + 9 >= ground_level:  #check if dino on ground height
-            self.__dino.jump()
-            if not self.__dino.jumping and self.__dino.i + 9 < ground_level:
-                self.__dino.down()  #bring dino down
-        else:
-            print("Already jumping!")  #let user know dino in air
-        '''
 
     def pause(self):
         if not self.__started: #pause if game has started
@@ -196,7 +194,7 @@ class DinoGame:
 def update_obstacles(game, root):
     if not game.is_pause() and (game.is_started() or game.is_game_over()):
         game.next()  # Unified method with feature flag
-            
+
         if game.is_game_over():
             return  # Don't schedule another update if game is over
     
