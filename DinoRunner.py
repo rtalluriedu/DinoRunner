@@ -17,6 +17,8 @@ class DinoGame:
         self.nrow = nrow
         self.ncol = ncol
         self.scale = scale
+        self.__canvas = Canvas(root, width=ncol*scale, height=nrow*scale, bg='white') #create canvas
+        self.__canvas.pack()
  
         #setter/getter methods
 
@@ -27,8 +29,20 @@ class DinoGame:
         self.__pause_time = 0
         self.__next_spawn_time = random.uniform(1,3) + time.time() #spawns obstacle at a radnom interval between 1-3 secs
         
-        self.__canvas = Canvas(root, width=ncol*scale, height=nrow*scale, bg='white') #create canvas
-        self.__canvas.pack()
+        self.__high_score = 0  # Add this with other game variables
+        self.__score_display = None  # Will hold the score text object
+        self.__high_score_display = None  # Will hold the high score text object
+        
+        self.__score_display = self.__canvas.create_text(ncol * scale - 100, 20,  #current score
+        text="Score: 0",
+        font=('Arial', 14),
+        fill='black',
+        anchor='ne')
+        self.__high_score_display = self.__canvas.create_text(ncol * scale - 100, 40, #high score
+        text="High Score: 0",
+        font=('Arial', 14),
+        fill='black',
+        anchor='ne')
 
         self.__start_msg = self.__canvas.create_text( #start message displayed
             (ncol * scale) / 2, (nrow * scale) / 2,
@@ -108,12 +122,17 @@ class DinoGame:
             self.__started = True
             self.__start_time = time.time()
             self.__dino.activate()  #makes dinosaur appear
+            self.__canvas.itemconfig(
+            self.__score_display,
+            text="Score: 0")
             print("Game started!")
         
         
     def next(self):
         if not self.__started or self.__pause or self.__game_over:
             return #only runs if game is running
+        self.update_survival_score() #call score
+        current_time = time.time()
 
         current_time = time.time() #creates obstacles
         if len(self.__obstacles) == 0 and current_time >= self.__next_spawn_time: #check if any obstacles are present
@@ -129,13 +148,21 @@ class DinoGame:
                     if (dino_pixel.i == pixel.i and #check if pixels are equal to each other
                         dino_pixel.j == pixel.j):
                         self.collision_sound.play()  # Play collision sound
-                        self.__canvas.create_text( #game over message 
-                            self.ncol * self.scale / 2,
-                            self.nrow * self.scale / 2,
-                            text="GAME OVER",
-                            font=('Times', 30),
-                            fill='red'
-                        )
+                        
+                        if self.__score > self.__high_score:
+                            self.__high_score = self.__score
+                        self.__canvas.create_text(
+                        self.ncol * self.scale / 2,
+                        self.nrow * self.scale / 2 - 30,
+                        text=f"Final Score: {self.__score}",
+                        font=('Times', 20),
+                        fill='black')
+                        self.__canvas.create_text(
+                        self.ncol * self.scale / 2,
+                        self.nrow * self.scale / 2,
+                        text="GAME OVER",
+                        font=('Times', 30),
+                        fill='red')
                         self.__game_over = True
                         return
                 
@@ -176,16 +203,26 @@ class DinoGame:
             print("Game resumed")
 
 
+    
     def update_survival_score(self):
         if self.__started and not self.__pause and not self.__game_over:
             current_time = time.time()
-            seconds_survived = int(current_time - self.__start_time)
-            base_score = seconds_survived
-            bonus_multiplier = 1.0 + 0.1 * (seconds_survived // 30) #bonus multiplier that increases by .1 every 30 seconds survived
-            self.__score = int(base_score * bonus_multiplier) #final score adds bonus
+            seconds_survived = current_time - self.__start_time  # Keep as float for more precision
+            base_score = int(seconds_survived * 10)  # Multiply to make score increase faster
+            bonus_multiplier = 1.0 + 0.1 * (int(seconds_survived)) // 30  # Bonus every 30 seconds
+            self.__score = int(base_score * bonus_multiplier)
+    
+            if self.__score > self.__high_score:
+                self.__high_score = self.__score
+    
+        # Update displays
+            self.__canvas.itemconfig(
+            self.__score_display,
+            text=f"Score: {self.__score}")
+            self.__canvas.itemconfig(
+            self.__high_score_display,
+            text=f"High Score: {self.__high_score}")
             
-            print(f"Score: {self.__score} (Time: {seconds_survived}s, Bonus: {bonus_multiplier:.1f}x)")
-
 
 #=============================================================================
 # Main Game Runner - DO NOT MODIFY
