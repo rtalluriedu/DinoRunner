@@ -7,7 +7,7 @@ class Pixel:
     color=['black','white','yellow','red','blue','green','orange','purple','brown','cyan']
 
     def __init__(self, canv, i, j, nrow, ncol, scale, icolor, vector=[0,0]):
-        '''initiates the pixel object with the given parameters.'''
+        '''Initiates the pixel object with the given parameters.'''
         self.canvas = canv
         self.i = i
         self.j = j
@@ -21,38 +21,41 @@ class Pixel:
                                              
 
     def __str__(self):
-        """return a string representation of the pixel object."""
+        """Return a string representation of the pixel object."""
         return f"({self.i}, {self.j}) {self.color[self.icolor]}"
 
 
     def delete(self):
-        '''deletes the pixel from the canvas.'''
+        '''Deletes the pixel from the canvas.'''
         self.canvas.delete(self.id)
 
     def left(self):
-        '''sets the pixels movement vector to move left.'''
+        '''Sets the pixels movement vector to move left.'''
         self.vector = [0,-1]
         
 
     def right(self):
-        '''sets the pixels movement vector to move right.'''
+        '''Sets the pixels movement vector to move right.'''
         self.vector = [0,1]
 
     def up(self):
-        '''sets the pixels movement vector to move up.'''
+        '''Sets the pixels movement vector to move up.'''
         self.vector = [-1,0]
 
     def down(self):
-        '''sets the pixels movement vector to move down.'''
+        '''Sets the pixels movement vector to move down.'''
         self.vector = [1,0]
 
     def next(self):
-        '''moves the pixel one step in the current direction.'''
-        # calculate new position
+        '''Moves the pixel one step in the current direction.'''
+
+        # CALCULATE NEW POSITION #
+
         new_i = self.i + self.vector[0]
         new_j = self.j + self.vector[1]
 
-        # check boundary conditions
+        # CHECK BOUNDARY CONDITIONS  #
+
         if 0 <= new_i < self.nrow and 0 <= new_j < self.ncol:
             # update position
             self.i = new_i
