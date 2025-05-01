@@ -1,7 +1,9 @@
+
 from tkinter import *
 import time, random
 from Obstacles import Obstacles
 from Dino import Dino
+from pygame import mixer
 
 class DinoGame:
     
@@ -10,52 +12,62 @@ class DinoGame:
     #-------------------------------------------------------------------------
     
     def __init__(self, root, nrow, ncol, scale):
-        # canvas variables
+        '''Initializes the game with the given parameters.'''
+
+        ### SELF VARIABLES ###
         
         self.root = root
         self.nrow = nrow
         self.ncol = ncol
         self.scale = scale
- 
-        #setter/getter methods
+        self.__canvas = Canvas(root, width=ncol*scale, height=nrow*scale, bg='white')
+        self.__canvas.pack()
+
+        ### SETTER / GETTER METHODS ### 
 
         self.__game_over = False
         self.__pause = False
         self.__started = False
         self.__score = 0
         self.__pause_time = 0
-        self.__next_spawn_time = random.uniform(1,3) + time.time() #spawns obstacle at a radnom interval between 1-3 secs
-        
-        self.__canvas = Canvas(root, width=ncol*scale, height=nrow*scale, bg='black') #create canvas
-        self.__canvas.pack()
+        self.__next_spawn_time = random.uniform(1,3) + time.time() # spawns obstacle at a radnom interval between 1-3 secs
+        self.__high_score = 0 # initializing high score
+        self.__score_display = None # initializing score display
+        self.__high_score_display = None # initializing high score display
+    
+        ### CANVAS OBJECTS ###
 
-        self.__start_msg = self.__canvas.create_text( #start message displayed
-            (ncol * scale) / 2, (nrow * scale) / 2,
-            text="Hit 'S' to start game", 
-            font=('Times', 25)
-        )
+        self.__score_display = self.__canvas.create_text(ncol * scale - 100, 20, # displays current score
+                                                         text="Score: 0",
+                                                         font=('Arial', 14),
+                                                         fill='black',
+                                                         anchor='ne')
         
-        #initialize dino and obstacle classes
+        self.__high_score_display = self.__canvas.create_text(ncol * scale - 100, 40, # displays high score
+                                                              text="High Score: 0",
+                                                              font=('Arial', 14),
+                                                              fill='black',
+                                                              anchor='ne')
+
+        self.__start_msg = self.__canvas.create_text((ncol * scale) / 2, (nrow * scale) / 2, # displays start message
+                                                     text="Hit 'S' to start game", 
+                                                     font=('Times', 25),
+                                                     fill='black')
+        
+        ### INTIALIZE DINO OBJECT AND OBSTACLE LIST ###
+
         self.__obstacles = [] #empty list to store obstacles
-        self.__dino = Dino(self.__canvas, self.nrow//2 + 28, self.ncol - 100, self.scale)
+        self.__dino = Dino(self.__canvas, self.nrow, self.ncol, self.scale)
+        
 
-        self.root.bind("<r>", lambda e: self.restart())
-
-       # self.__highscore = self.load_highscore() #load high score from file
-       # self.__highscore_text = self.__canvas.create_text(self.scale * 10, self.scale * 3, text=f"High Score: {self.__highscore}", font=('Times', 30), anchor='w', fill='white')
-        # In __init__():
-        self.__score_text = self.__canvas.create_text(
-            self.scale * 10, self.scale * 2, 
-            text="Score: 0", 
-            font=('Times', 20), 
-            anchor='w', 
-            fill='white'
-        )
-
-        # In update_survival_score():
-        self.__canvas.itemconfig(self.__score_text, text=f"Score: {self.__score}")                                       
-
-
+        # vv remove comments to test sound files vv
+        ''' 
+        #sound files initializ
+        mixer.init()
+        self.jump_sound = mixer.Sound('jump.wav.wav')
+        self.collision_sound = mixer.Sound('collision.flac')
+        '''
+        
     #-------------------------------------------------------------------------
     # Game State Methods
     #-------------------------------------------------------------------------
@@ -110,73 +122,106 @@ class DinoGame:
     #-------------------------------------------------------------------------
     # Game Logic
     #-------------------------------------------------------------------------
-    
-    def start_game(self):
-        if not self.__started and not self.__game_over:
-            self.__canvas.delete(self.__start_msg)
-            self.__score = 0
-            self.__started = True
-            self.__start_time = time.time()
-            self.__dino.activate()
-            print("Game started!")
 
-            # obstacle loop
-            self.root.after(50, update_obstacles, self, self.root)
+    def start_game(self):
+        '''Starts the game.'''
+        if not self.__started and not self.__game_over: # make sure game started
+            self.__canvas.delete(self.__start_msg)  # take away begining message
+
+            self.__score = 0
+            self.__start_time = time.time()
+
+            self.__dino.activate()  #makes dinosaur appear
+            self.__canvas.itemconfig(self.__score_display, # resets score display
+                                     text=f"Score: {self.__score}")
+            
+            self.__started = True
+            print("Game started!")
+        
         
     def next(self):
-        if not self.__started or self.__pause or self.__game_over:
-            return #only runs if game is running
+        '''Updates the game state.'''
+        if not self.__started or self.__pause or self.__game_over: # make sure game is running
+            return
+        
+        # UPDATES SCORE AND CHECKS FOR OBSTACLES #
 
-        current_time = time.time() #creates obstacles
-        if len(self.__obstacles) == 0 and current_time >= self.__next_spawn_time: #check if any obstacles are present
+        self.update_survival_score()
+
+        current_time = time.time()
+
+        if len(self.__obstacles) == 0 and current_time >= self.__next_spawn_time: # if no obstacles are present, create a new one and set next spawn time
             new_obstacle = Obstacles.random_select(self.__canvas, self.nrow, self.ncol, self.scale)
             new_obstacle.activate()
             self.__obstacles.append(new_obstacle)
-            self.__next_spawn_time = current_time + random.uniform(1, 3) #new obstacles every 1-3s
 
-        for obstacle in self.__obstacles[:]: 
-            obstacle.left() #moves obstacle left by one
-            for dino_pixel in self.__dino.dino_pixels: #check obstacle dino collison
-                for pixel in obstacle.pixels:
-                    if (dino_pixel.i == pixel.i and #check if pixels are equal to each other
-                        dino_pixel.j == pixel.j):
-                        self.__canvas.create_text( #game over message 
-                            self.ncol * self.scale / 2,
-                            self.nrow * self.scale / 2,
-                            text="GAME OVER",
-                            font=('Times', 30),
-                            fill='red'
-                        )
-                        self.__game_over = True
-                        return
+            self.__next_spawn_time = current_time + random.uniform(1, 3) # new obstacles every 1-3s
+
+        # MOVES OBSTACLES #
+
+        for obstacle in self.__obstacles: # move obstacles
+            obstacle.left(self.__score) # move obstacles left
+
+        # CHECKS FOR COLLISION #
+
+        collision = self.check_collision(self.__obstacles) # check for collision with dino and obstacles
+        
+        if collision:
+            self.collision_sound.play()
+
+            if self.__score > self.__high_score:
+                self.__high_score = self.__score # updates high score if recent score is greater than previous high score
+
+            self.__canvas.create_text(self.ncol * self.scale / 2,
+                                          self.nrow * self.scale / 2 - 30,
+                                          text=f"Final Score: {self.__score}",
+                                          font=('Times', 20),
+                                          fill='black')
+            self.__canvas.create_text(self.ncol * self.scale / 2,
+                                          self.nrow * self.scale / 2,
+                                          text="GAME OVER",
+                                          font=('Times', 30),
+                                          fill='red')
+            self.__game_over = True
+            return
+
+        # REMOVES OFF SCREEN OBSTACLES #
                 
-            if obstacle.j + obstacle.w < 0:  #checks if obstacle is off screen so it can be removed
+        for obstacle in self.__obstacles[:]: # checks for and removes any off screen obstacles
+            if obstacle.j + obstacle.w < 0:
                 for pixel in obstacle.pixels:
                     pixel.delete()
                 self.__obstacles.remove(obstacle)
-                continue
-        self.update_survival_score()
+            continue
 
     
-    def check_collision(self, obstacle): #check every dino pixel with every obstacle pixel
-        for dino_pixel in self.__dino.dino_pixels: 
-            for obs_pixel in obstacle.pixels:
-                if dino_pixel.i == obs_pixel.i and dino_pixel.j == obs_pixel.j:
-                    return True  #true for overlap
-        return False #false for no overlap
+    def check_collision(self, obstacles):
+        '''Checks if the dino collides with any obstacles.'''
+        for obstacle in obstacles: 
+            for dino_pixel in self.__dino.dino_pixels:
+                for pixel in obstacle.pixels:
+                    if (dino_pixel.i == pixel.i and #check if dino/obstacle pixels are overlapping
+                        dino_pixel.j == pixel.j):
+                        print("Collision detected!")
+                        return True  # returns true if overlap
+        return False # returns false if no overlap
     
 
     def jump(self):
-        if self.__started and not self.__game_over and not self.__pause and not self.__dino.jumping: # make sure game is running
+        '''Calls for the dino to jump.'''
+        if self.__started and not self.__game_over and not self.__dino.jumping: # make sure game is running
             self.__dino.jump()
+            self.jump_sound.play()
+
 
     def pause(self):
-        if not self.__started: #pause if game has started
+        '''Pauses or resumes the game.'''
+        if not self.__started: # pause if game has started
             return
         
         if not self.__pause:
             self.__pause = True
-            self.__pause_start = time.time()  #track time of pause
+            self.__pause_start = time.time() # track time of pause
             print("Game paused")
 
         else: #resumes game
@@ -186,54 +231,32 @@ class DinoGame:
             print("Game resumed")
 
 
+    
     def update_survival_score(self):
+        '''Updates the score based on survival time.'''
+
+        # UPDATE SCORE #
+
         if self.__started and not self.__pause and not self.__game_over:
             current_time = time.time()
-            seconds_survived = int(current_time - self.__start_time)
-            base_score = seconds_survived
-            bonus_multiplier = 1.0 + 0.1 * (seconds_survived // 30) #bonus multiplier that increases by .1 every 30 seconds survived
-            self.__score = int(base_score * bonus_multiplier) #final score adds bonus
+            seconds_survived = current_time - self.__start_time  # keep as float for more precision
+            base_score = int(seconds_survived * 10)  # multiply to make score increase faster
+            bonus_multiplier = 1.0 + 0.1 * (int(seconds_survived)) // 30  # bonus every 30 seconds
+            self.__score = int(base_score * bonus_multiplier)
+    
+            if self.__score > self.__high_score:
+                self.__high_score = self.__score
+    
+        # UPDATE DISPLAYS #
+
+            self.__canvas.itemconfig(
+            self.__score_display,
+            text=f"Score: {self.__score}")
+            self.__canvas.itemconfig(
+            self.__high_score_display,
+            text=f"High Score: {self.__high_score}")
             
-            self.__canvas.itemconfig(self.__score_text, text=f"Score: {self.__score}")
-            print(f"Score: {self.__score} (Time: {seconds_survived}s, Bonus: {bonus_multiplier:.1f}x)")
 
-    def restart(self):
-        self.__canvas.delete("all")
-
-        for obs in self.__obstacles:
-            for pixel in obs.pixels:
-                pixel.delete()
-        self.__obstacles.clear()
-
-        self.set_game_over(False)
-        self.set_started(False)
-        self.set_pause(False)
-        self.set_score(0)
-        self.set_pause_time(0)
-        self.set_next_spawn_time(time.time() + random.uniform(1, 3))
-        self.__start_time = time.time()
-
-
-        self.__start_msg = self.__canvas.create_text(
-            (self.ncol * self.scale) / 2,
-            (self.nrow * self.scale) / 2,
-            text="Hit 'S' to start game",
-            font=('Times', 25)
-                            )
-        
-        self.__score_text = self.__canvas.create_text(
-            self.scale * 10, self.scale * 2,
-            text="Score: 0",
-            font=('Times', 20),
-            anchor='w',
-            fill='white'
-)
-
-    # Reactivate the same Dino object — DO NOT recreate it
-    # Instead, just reset its internal pixels
-        self.__dino = Dino(self.__canvas, self.nrow//2 + 28, self.ncol- 100, self.scale, game = self)
-        print("Game reset. Press 'S' to start.")
-        
 #=============================================================================
 # Main Game Runner - DO NOT MODIFY
 #=============================================================================
@@ -241,7 +264,7 @@ class DinoGame:
 def update_obstacles(game, root):
     if not game.is_pause() and (game.is_started() or game.is_game_over()):
         game.next()  # Unified method with feature flag
-            
+
         if game.is_game_over():
             return  # Don't schedule another update if game is over
     
@@ -263,7 +286,7 @@ def main():
     root.bind("<space>", lambda e: game.jump())
     root.bind("<p>", lambda e: game.pause())
     root.bind("<s>", lambda e: game.start_game())
-
+    
     # Start the game loop
     root.after(10, update_obstacles, game, root)
     
