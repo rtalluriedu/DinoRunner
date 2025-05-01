@@ -4,10 +4,13 @@ import numpy as np
 
 class Dino(Pixel):
     def __init__(self, canv, nrow, ncol, scale, c=2):
-        '''initiates the dino object with the given parameters.'''
+        '''Initiates the dino object with the given parameters.'''
+
         self.canvas = canv
-        self.i = nrow - (1 * scale)  # start at the bottom of the canvas
-        self.j = ncol / 2 # start in the middle of the canvas
+        self.i = nrow * (3/4)  # start at the bottom of the canvas
+        self.j = (ncol * (1/4)) # start in the middle of the canvas
+        self.w = 6
+        self.h = 9
         self.nrow = nrow
         self.ncol = ncol
         self.scale = scale
@@ -16,20 +19,40 @@ class Dino(Pixel):
         self.jumping = False
 
 
+
     def get_pattern(self):
-        '''returns the pattern of the dino object as a numpy array.'''
-        return np.array([[0, 0, 1, 1, 1, 1],
-                         [0, 0, 1, 1, 0, 1],
-                         [0, 0, 1, 1, 1, 1],
-                         [0, 0, 1, 1, 0, 0],
-                         [1, 0, 1, 1, 1, 1],
-                         [1, 0, 1, 1, 0, 0],
-                         [1, 1, 1, 1, 0, 0],
-                         [0, 1, 0, 1, 0, 0],
-                         [0, 1, 0, 1, 0, 0]])
+        '''Returns the pattern of the dino object as a numpy array.'''
+
+        choice = int(input("       CHARACTER SELECTION!      \n"
+                           "ENTER 1 FOR T-REX - 2 FOR CAVEMAN: "))
+
+
+        if choice == 1:
+            return np.array([[0, 0, 1, 1, 1, 1],
+                             [0, 0, 1, 1, 0, 1],
+                             [0, 0, 1, 1, 1, 1],
+                             [0, 0, 1, 1, 0, 0],
+                             [1, 0, 1, 1, 1, 1],
+                             [1, 0, 1, 1, 0, 0],
+                             [1, 1, 1, 1, 0, 0],
+                             [0, 1, 0, 1, 0, 0],
+                             [0, 1, 0, 1, 0, 0]])
+        elif choice == 2:
+            self.color = 3
+            return np.array([[0, 1, 1, 1, 1, 1],
+                             [0, 1, 1, 1, 0, 1],
+                             [0, 1, 1, 1, 1, 1],
+                             [0, 1, 1, 0, 0, 0],
+                             [0, 0, 0, 1, 0, 0],
+                             [0, 1, 1, 1, 1, 1],
+                             [0, 0, 0, 1, 0, 0],
+                             [0, 0, 1, 0, 1, 0],
+                             [0, 1, 0, 0, 0, 1]])
+                            
 
     def activate(self):
-        '''iterates through the pattern array and creates pixel objects for every non-zero values'''
+        '''Iterates through the pattern array and creates pixel objects for every non-zero values.'''
+
         dino_pixels = []
         
         for r in range(self.pattern.shape[0]):
@@ -49,11 +72,12 @@ class Dino(Pixel):
     
 
     def down(self):
-        '''moves the dino object down by one step.'''
+        '''Moves the dino object down by one step.'''
+
         new_dino_pixels = []
 
         for pixel in reversed(self.dino_pixels):
-            if pixel.i < self.nrow - .5 * self.scale: # check if the dino can move down
+            if pixel.i < self.nrow: # check if the dino can move down
                 pixel.delete() # delete the current dino
                 pixel.i += 1 # move down
                 pixel = Pixel(pixel.canvas,
@@ -65,7 +89,7 @@ class Dino(Pixel):
                              self.color
                              ) # activate the dino at the new position
                 new_dino_pixels.append(pixel)
-            elif pixel.i >= self.nrow - .5 * self.scale: # check if the dino is at the bottom
+            elif pixel.i >= self.nrow - 1: # check if the dino is at the bottom
                 print("Dino at the bottom!")
                 break
 
@@ -73,7 +97,7 @@ class Dino(Pixel):
     
 
     def up(self):
-        '''moves the dino object up by one step.'''
+        '''Moves the dino object up by one step.'''
         new_dino_pixels = []
 
         for pixel in self.dino_pixels:
@@ -95,7 +119,7 @@ class Dino(Pixel):
         self.dino_pixels = new_dino_pixels
 
     def jump(self):
-        '''initiates a jump animation for the dinosaur'''
+        '''Initiates a jump animation for the dinosaur'''
         if self.jumping == False: # check if the dino can jump
             self.jumping = True # set jumping to True
 
@@ -117,7 +141,7 @@ class Dino(Pixel):
 
 
     def activate_jump(self, step):
-        '''moves the dino object up by a certain step and then back down'''
+        '''Moves the dino object up by a certain step and then back down.'''
         if step == 1:
             self.up()
             
