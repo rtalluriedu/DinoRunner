@@ -7,59 +7,77 @@ class Obstacles:
     def __init__(self, canv, nrow, ncol, scale, c=2, pattern=None):
         """Initialize an obstacle with basic properties"""
         self.canv = canv
-        self.nrow = nrow  #canvas rows
-        self.ncol = ncol  #canvas columns
-        self.scale = scale #pixel block size
-        self.c = c #color
-        self.pattern = pattern #pattern/shape for obstcale
+        self.nrow = nrow  # canvas rows
+        self.ncol = ncol  # canvas columns
+        self.scale = scale # pixel block size
+        self.c = c # color
+        self.pattern = pattern # pattern/shape for obstcale
         self.pixels = []
+
         self.i = 0
         self.j = 0  
         self.w = 0  
-        self.h = 0  
+        self.h = 0 
+
+        self.speed = 0
 
     def activate(self):
         """Create the obstacle on the canvas using Pixel objects"""
         if self.pattern is None:
-            return  #Only used when given a pattern
+            return  # Only used when given a pattern
         
         pattern_array = np.array(self.pattern) #makes pattern an array in numpy
         self.h, self.w = pattern_array.shape
-        self.i = self.nrow // 2 - self.h // 2  #Middle in terms of verticality
-        self.j = self.ncol - self.w  #puts object to the right
+        self.i = (self.nrow * (3/4)) + 5  #Middle in terms of verticality
+        self.j = self.ncol  # puts object to the right
         
-        for row in range(self.h):  
-            for col in range(self.w):  
-                if pattern_array[row, col] != 0: #create new pixel if not empty
+        for r in range(self.h):  
+            for c in range(self.w):  
+                if pattern_array[r, c] != 0: #create new pixel if not empty
                     new_pixel = Pixel(
                         canv=self.canv,
-                        i=self.i + row,  # Correct row position
-                        j=self.j + col,  # Correct column position
+                        i=self.i + r,  # Correct row position
+                        j=self.j + c,  # Correct column position
                         nrow=self.nrow,
                         ncol=self.ncol,
                         scale=self.scale,
-                        icolor=pattern_array[row, col],
+                        icolor=self.c,  # Color of the obstacle
                         vector=[0,0]  # Added default vector
                     )
                     self.pixels.append(new_pixel)
 
       
-    def left(self):
-        self.j -= 1 #set position
+    def left(self, score):
+        '''Moves the obstacle left by a certain speed based on the score.'''
+
+        # DETERMINES SPEED BASED ON SCORE #
+        
+        if 0 <= score < 150:
+            self.speed = 1
+        elif 150 <= score < 300:
+            self.speed = 2
+        elif 300 <= score < 500:
+            self.speed = 4
+        elif 500 <= score < 1000:
+            self.speed = 8
+
+        # MOVES THE OBSTACLE LEFT #
+
+        self.j -= self.speed # set position
         for pixel in self.pixels:
-            pixel.delete() #remove current obstacle
-            pixel.j -= 1 #update postion
-            pixel.id = self.canv.create_rectangle( #remake obstacle in new position
+            pixel.delete() # remove current obstacle
+            pixel.j -= self.speed # update postion
+            pixel.id = self.canv.create_rectangle( # remake obstacle in new position
                 pixel.j * self.scale,
                 pixel.i * self.scale,
                 (pixel.j + 1) * self.scale,
                 (pixel.i + 1) * self.scale,
-                fill=Pixel.color[pixel.icolor],
+                fill=Pixel.color[self.c],
                 outline='black'
             )
 
     @staticmethod
-    def random_select(canv, nrow, ncol, scale): #randonly pick and make one of the obstacles
+    def random_select(canv, nrow, ncol, scale): # randonly pick and make one of the obstacles
         obstacle_choices = [Box, Tree, Pencil]
         chosen_type = random.choice(obstacle_choices)
         return chosen_type(canv, nrow, ncol, scale)
@@ -73,24 +91,23 @@ class Obstacles:
 class Box(Obstacles):
     def __init__(self, canv, nrow, ncol, scale):
         pattern = [
-            [2, 2, 2],
-            [2, 2, 2],
-            [2, 2, 2]
+            [0, 0, 0, 0],
+            [2, 2, 2, 0],
+            [2, 2, 2, 0],
+            [2, 2, 2, 0]
         ]
         super().__init__(canv, nrow, ncol, scale, c=2, pattern=pattern)
         
-    # Remove the pass statement and implement the __init__ method as described in the PDF.
-
 
 class Tree(Obstacles):
     def __init__(self, canv, nrow, ncol, scale):
         pattern = [
-            [3, 3, 3],
-            [3, 3, 3],
-            [0, 3, 0]
+            [0, 0, 0, 0],
+            [3, 3, 3, 0],
+            [3, 3, 3, 0],
+            [0, 3, 0, 0]
         ]
         super().__init__(canv, nrow, ncol, scale, c=3, pattern=pattern)
-    # Remove the pass statement and implement the __init__ method as described in the PDF.
 
         
 class Pencil(Obstacles):
@@ -102,8 +119,6 @@ class Pencil(Obstacles):
             [5, 0, 0, 0],
         ]
         super().__init__(canv, nrow, ncol, scale, c=4, pattern=pattern)
-    # Remove the pass statement and implement the __init__ method as described in the PDF.
-
 
 
 #=============================================================================
