@@ -2,6 +2,8 @@ from tkinter import *
 import time
 import random
 
+### !!! GROUP: IAN GRANT AND RAJIT TALLURI - IT WONT LET ME ADD GROUP MEMBER ON GRADESCOPE
+
 class Pixel:
     # Predefined color list for pixel representation
     color=['black','white','yellow','red','blue','green','orange','purple','brown','cyan']
